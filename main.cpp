@@ -1,7 +1,7 @@
 #include "raylib.h"
 #include <numbers>
-#include <vector>
 #include <string>
+#include <vector>
 
 struct Tile {
   float width;
@@ -11,9 +11,11 @@ struct Tile {
   Color BorderColor;
 };
 
+
 void DrawTile(Tile tile) {
   DrawRectangle(tile.position.x, tile.position.y, tile.width, tile.height,
                 tile.color);
+
   DrawRectangleLines(tile.position.x, tile.position.y, tile.width, tile.height,
                      tile.BorderColor);
 }
@@ -34,10 +36,9 @@ Grid PixelGrid(int screenWidth, int screenHeight, float tilePixelSize) {
   for (int row = 0; row < grid.rows; row++) {
     std::vector<Tile> tileRow;
     for (int col = 0; col < grid.cols; col++) {
-      Tile tile = {
-          tilePixelSize, tilePixelSize,
-          Vector2{float(col * tilePixelSize), float(row * tilePixelSize)},
-          WHITE, GRAY};
+      Tile tile{tilePixelSize, tilePixelSize,
+                Vector2{float(col * tilePixelSize), float(row * tilePixelSize)},
+                WHITE, GRAY};
       tileRow.push_back(tile);
     }
     grid.tiles.push_back(tileRow);
@@ -53,45 +54,44 @@ void DrawGrid(Grid &grid) {
   }
 }
 
-bool checkNeighbours(const Grid& grid, int row, int col) {
-    int neighbours = 0;
+bool checkNeighbours(const Grid &grid, int row, int col) {
+  int neighbours = 0;
 
-    std::vector<std::pair<int, int>> directions = {
-        {0,1},{1,0},{0,-1},{-1,0},
-        {1,1},{-1,-1},{-1,1},{1,-1}
-    };
+  std::vector<std::pair<int, int>> directions = {
+      {0, 1}, {1, 0}, {0, -1}, {-1, 0}, {1, 1}, {-1, -1}, {-1, 1}, {1, -1}};
 
-    for (auto& direction : directions) {
-        int newRow = row + direction.second;
-        int newCol = col + direction.first;
+  for (auto &direction : directions) {
+    int newRow = row + direction.second;
+    int newCol = col + direction.first;
 
-        if (newCol >= 0 && newCol < grid.cols &&
-            newRow >= 0 && newRow < grid.rows) {
+    if (newCol >= 0 && newCol < grid.cols && newRow >= 0 &&
+        newRow < grid.rows) {
 
-            if (grid.tiles[newRow][newCol].color.r == 0) { // BLACK
-                neighbours++;
-            }
-        }
+      if (grid.tiles[newRow][newCol].color.r == 0) { // BLACK
+        neighbours++;
+      }
     }
+  }
 
-    if (grid.tiles[row][col].color.r == 255) { // WHITE
-        return neighbours == 3;
-    }
-
-    return neighbours == 2 || neighbours == 3; // BLACK
+  if (grid.tiles[row][col].color.r == 255) { // WHITE
+    return neighbours == 3;
+  }
+  return neighbours == 2 || neighbours == 3; // BLACK
 }
 
 void CellularAutomation(Grid &grid) {
+
   std::vector<std::vector<Tile>> temp;
   for (int row = 0; row < grid.rows; row++) {
     std::vector<Tile> tempRow;
     for (int col = 0; col < grid.cols; col++) {
-      Tile& tile = grid.tiles[row][col];
-      if (checkNeighbours(grid, row, col)){
-        tempRow.push_back({tile.width, tile.height, tile.position, BLACK, GRAY});
-      }
-      else {
-        tempRow.push_back({tile.width, tile.height, tile.position, WHITE, GRAY});
+      Tile &tile = grid.tiles[row][col];
+      if (checkNeighbours(grid, row, col)) {
+        tempRow.push_back(
+            {tile.width, tile.height, tile.position, BLACK, GRAY});
+      } else {
+        tempRow.push_back(
+            {tile.width, tile.height, tile.position, WHITE, GRAY});
       }
     }
     temp.push_back(tempRow);
@@ -99,6 +99,24 @@ void CellularAutomation(Grid &grid) {
   grid.tiles = temp;
 }
 
+void ClearGrid(Grid &grid) {
+  for (auto &row : grid.tiles) {
+    for (auto &tile : row) {
+      tile.color = WHITE;
+    }
+  }
+}
+
+void RandomizeGrid(Grid &grid) {
+  ClearGrid(grid);
+  for (int row = 0; row < grid.rows; row++) {
+    for (int col = 0; col < grid.cols; col++) {
+      if (rand() % 2) {
+        grid.tiles[row][col].color = BLACK;
+      }
+    }
+  }
+}
 
 void UpdateGrid(Grid &grid, int row, int col, Color newColor) {
   if (row >= 0 && row < grid.rows && col >= 0 && col < grid.cols) {
@@ -130,20 +148,28 @@ int main() {
       startCellularAutomation = !startCellularAutomation;
     }
 
+    if (IsKeyPressed(KEY_R) and !startCellularAutomation) {
+      RandomizeGrid(grid);
+      generation = 0;
+    }
+
+    if (IsKeyPressed(KEY_C) and !startCellularAutomation) {
+      ClearGrid(grid);
+      generation = 0;
+    }
+
     if (startCellularAutomation) {
       CellularAutomation(grid);
       generation++;
     }
 
-    if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+    if (IsMouseButtonDown(MOUSE_LEFT_BUTTON)) {
       Vector2 mousePos = GetMousePosition();
       int col = mousePos.x / tilePixelSize;
       int row = mousePos.y / tilePixelSize;
 
       if (row >= 0 && row < grid.rows && col >= 0 && col < grid.cols) {
-        Color currentColor = grid.tiles[row][col].color;
-        Color newColor = (currentColor.r == 255) ? BLACK : WHITE;
-        UpdateGrid(grid, row, col, newColor);
+        UpdateGrid(grid, row, col, BLACK);
       }
     }
 

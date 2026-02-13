@@ -6,9 +6,9 @@ This is an implementation of Conway's Game of Life Cellular Automaton in cpp usi
 
 ## Controls
 
--- Press 'R' to randomize the board (resets the board to the initial state)
--- Press 'Space' to start/stop the simulation
--- Press 'C' to clear the board
+- Press 'R' to randomize the board (resets the board to the initial state)
+-  Press 'Space' to start/stop the simulation
+-   Press 'C' to clear the board
 
 ## Randomized
 https://github.com/user-attachments/assets/ee280965-60fa-4358-91e8-50e148f57d05

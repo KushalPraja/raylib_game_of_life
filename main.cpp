@@ -2,6 +2,8 @@
 #include <numbers>
 #include <string>
 #include <vector>
+#include "raymath.h"
+
 
 struct Tile {
   float width;
@@ -127,12 +129,14 @@ void UpdateGrid(Grid &grid, int row, int col, Color newColor) {
 int main() {
   constexpr int screenWidth = 800;
   constexpr int screenHeight = 600;
+  constexpr int worldWidth = 1000;
+  constexpr int worldHeight = 1000;
   InitWindow(screenWidth, screenHeight, "Game of Life");
   SetTargetFPS(60);
 
   Camera2D camera{};
-  camera.target = (Vector2){0.0f, 0.0f};
-  camera.offset = (Vector2){0.0f, 0.0f};
+  camera.target = (Vector2){worldWidth/2.0f, worldHeight/2.0f};
+  camera.offset = (Vector2){screenWidth/2.0f, screenHeight/2.0f};
   camera.rotation = 0.0f;
   camera.zoom = 1.0f;
 
@@ -140,10 +144,29 @@ int main() {
   int generation = 0;
 
   float tilePixelSize = 10;
-  Grid grid = PixelGrid(screenWidth, screenHeight, tilePixelSize);
+  Grid grid = PixelGrid(worldWidth, worldHeight, tilePixelSize);
+
+  Vector2 prevMousePos = GetMousePosition();
 
   while (!WindowShouldClose()) {
 
+    float mouseDelta = GetMouseWheelMove();
+    float newZoom = camera.zoom + mouseDelta * 0.1f;
+    if (newZoom <= 0){
+      newZoom = 0.1f;
+    }
+    camera.zoom = newZoom;
+
+    Vector2 thisPos = GetMousePosition();
+    Vector2 mouseDeltaPos = Vector2Subtract(thisPos, prevMousePos);
+    prevMousePos = thisPos;
+
+
+    if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT)){
+      camera.target = Vector2Scale(mouseDeltaPos, -1.0f/camera.zoom);
+      camera.offset = Vector2Add(camera.offset, mouseDeltaPos);
+    }
+    
     if (IsKeyPressed(KEY_SPACE)) {
       startCellularAutomation = !startCellularAutomation;
     }
@@ -158,13 +181,14 @@ int main() {
       generation = 0;
     }
 
+
     if (startCellularAutomation) {
       CellularAutomation(grid);
       generation++;
     }
 
     if (IsMouseButtonDown(MOUSE_LEFT_BUTTON)) {
-      Vector2 mousePos = GetMousePosition();
+      Vector2 mousePos = GetScreenToWorld2D(GetMousePosition(), camera);
       int col = mousePos.x / tilePixelSize;
       int row = mousePos.y / tilePixelSize;
 
@@ -178,8 +202,11 @@ int main() {
 
     BeginMode2D(camera);
     DrawGrid(grid);
-    DrawText(TextFormat("Generation: %d", generation), 10, 10, 20, BLACK);
     EndMode2D();
+  
+    DrawText(TextFormat("Generation: %d", generation), 10, 10, 20, BLACK);
+    DrawText(TextFormat("Zoom: %.2f", camera.zoom), 10, 30, 20, BLACK);
+    DrawText(TextFormat("FPS: %d", GetFPS()), 10, 50, 20, BLACK);
 
     EndDrawing();
   }

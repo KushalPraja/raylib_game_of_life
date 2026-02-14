@@ -5,8 +5,6 @@ CompileFlags:
     - -fmodule-*
   Add:
     - --target=x86_64-w64-mingw32
-    - -Wall
-    - -Wextra
 
 Diagnostics:
   UnusedIncludes: Strict

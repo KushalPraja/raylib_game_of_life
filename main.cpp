@@ -1,7 +1,5 @@
 #include "raylib.h"
 #include "raymath.h"
-#include <numbers>
-#include <string>
 #include <vector>
 
 struct Tile {
@@ -180,7 +178,7 @@ int main() {
 
 
     if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) {
-      camera.target = Vector2Scale(mouseDeltaPos, -1.0f / camera.zoom);
+      camera.target = Vector2Add(camera.target, Vector2Scale(mouseDeltaPos, -1.0f / camera.zoom));
       camera.offset = Vector2Add(camera.offset, mouseDeltaPos);
     }
 

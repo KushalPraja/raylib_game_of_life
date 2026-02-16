@@ -11,6 +11,8 @@ FetchContent_Declare(
         GIT_TAG master # Use 'master' for the latest, or a specific commit hash for stability
 )
 
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/assets DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+
 # The below makes raylib available as a target
 
 FetchContent_MakeAvailable(raylib)

@@ -126,8 +126,8 @@ void UpdateGrid(Grid &grid, int row, int col, Color newColor) {
 }
 
 int main() {
-  constexpr int screenWidth = 800;
-  constexpr int screenHeight = 600;
+  constexpr int screenWidth = 1920;
+  constexpr int screenHeight = 1080;
   constexpr int worldWidth = 1000;
   constexpr int worldHeight = 1000;
   InitWindow(screenWidth, screenHeight, "Game of Life");
@@ -144,6 +144,13 @@ int main() {
 
   float tilePixelSize = 10;
   Grid grid = PixelGrid(worldWidth, worldHeight, tilePixelSize);
+
+  // cwd
+  Font font = LoadFontEx("assets/Helvetica.ttf", 32, nullptr, 0);
+  if (font.texture.id == 0) {
+    TraceLog(LOG_ERROR, "Failed to load font");
+    return 1;
+  }
 
   Vector2 prevMousePos = GetMousePosition();
   float timer = 0.0f;
@@ -166,19 +173,18 @@ int main() {
     Vector2 mouseDeltaPos = Vector2Subtract(thisPos, prevMousePos);
     prevMousePos = thisPos;
 
-
-    if (IsKeyDown(KEY_UP)){
+    if (IsKeyDown(KEY_UP)) {
       updateInterval = updateInterval * 0.9f;
     }
-    if (IsKeyDown(KEY_DOWN)){
+    if (IsKeyDown(KEY_DOWN)) {
       updateInterval = updateInterval / 0.9f;
     }
 
     updateInterval = Clamp(updateInterval, 0.01f, 10.0f);
 
-
     if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) {
-      camera.target = Vector2Add(camera.target, Vector2Scale(mouseDeltaPos, -1.0f / camera.zoom));
+      camera.target = Vector2Add(
+          camera.target, Vector2Scale(mouseDeltaPos, -1.0f / camera.zoom));
       camera.offset = Vector2Add(camera.offset, mouseDeltaPos);
     }
 
@@ -219,14 +225,40 @@ int main() {
     DrawGrid(grid);
     EndMode2D();
 
-    DrawText(TextFormat("Generation: %d", generation), 10, 10, 20, BLACK);
-    DrawText(TextFormat("Zoom: %.2f", camera.zoom), 10, 30, 20, BLACK);
-    DrawText(TextFormat("FPS: %d", GetFPS()), 10, 50, 20, BLACK);
-    DrawText(TextFormat("Update Interval: %.2f", updateInterval), 10, 70, 20, BLACK);
+    const char *lines[] = {TextFormat("Generation: %d", generation),
+                           TextFormat("Zoom: %.2f", camera.zoom),
+                           TextFormat("FPS: %d", GetFPS()),
+                           TextFormat("Update Interval: %.2f", updateInterval)};
+
+    int lineCount = 4;
+    float fontSize = 20;
+    float spacing = 1;
+    float padding = 8;
+    float maxWidth = 0;
+    float totalHeight = 0;
+
+    for (int i = 0; i < lineCount; i++) {
+      Vector2 size = MeasureTextEx(font, lines[i], fontSize, spacing);
+      maxWidth = fmaxf(maxWidth, size.x);
+      totalHeight += size.y;
+    }
+
+    Vector2 startPos = {10, 10};
+    Rectangle box = {startPos.x - padding, startPos.y - padding,
+                     maxWidth + padding * 2, totalHeight + padding * 2};
+    DrawRectangleRec(box, Fade(LIGHTGRAY, 0.85f));
+    DrawRectangleLinesEx(box, 1, DARKGRAY);
+    
+    Vector2 pos = startPos;
+    for (int i = 0; i < lineCount; i++) {
+      DrawTextEx(font, lines[i], pos, fontSize, spacing, BLACK);
+      pos.y += fontSize; 
+    }
 
     EndDrawing();
   }
 
+  UnloadFont(font);
   CloseWindow();
   return 0;
 }

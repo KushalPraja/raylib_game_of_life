@@ -157,6 +157,7 @@ int main() {
 
   float updateInterval = 1.0f;
   Clamp(updateInterval, 0.1f, 10.0f);
+  bool erase = false;
 
   while (!WindowShouldClose()) {
 
@@ -208,13 +209,23 @@ int main() {
       generation++;
     }
 
+    if (IsKeyPressed(KEY_E)) {
+      erase = !erase;
+    }
+
     if (IsMouseButtonDown(MOUSE_LEFT_BUTTON)) {
       Vector2 mousePos = GetScreenToWorld2D(GetMousePosition(), camera);
       int col = mousePos.x / tilePixelSize;
       int row = mousePos.y / tilePixelSize;
 
-      if (row >= 0 && row < grid.rows && col >= 0 && col < grid.cols) {
-        UpdateGrid(grid, row, col, BLACK);
+      if (erase) {
+        if (row >= 0 && row < grid.rows && col >= 0 && col < grid.cols) {
+          UpdateGrid(grid, row, col, WHITE);
+        }
+      } else {
+        if (row >= 0 && row < grid.rows && col >= 0 && col < grid.cols) {
+          UpdateGrid(grid, row, col, BLACK);
+        }
       }
     }
 
@@ -225,10 +236,10 @@ int main() {
     DrawGrid(grid);
     EndMode2D();
 
-    const char *lines[] = {TextFormat("Generation: %d", generation),
-                           TextFormat("Zoom: %.2f", camera.zoom),
-                           TextFormat("FPS: %d", GetFPS()),
-                           TextFormat("Update Interval: %.2f", updateInterval)};
+    std::vector<const char *> lines = {
+        TextFormat("Generation: %d", generation),
+        TextFormat("Zoom: %.2f", camera.zoom), TextFormat("FPS: %d", GetFPS()),
+        TextFormat("Update Interval: %.2f", updateInterval)};
 
     int lineCount = 4;
     float fontSize = 20;
@@ -248,11 +259,11 @@ int main() {
                      maxWidth + padding * 2, totalHeight + padding * 2};
     DrawRectangleRec(box, Fade(LIGHTGRAY, 0.85f));
     DrawRectangleLinesEx(box, 1, DARKGRAY);
-    
+
     Vector2 pos = startPos;
     for (int i = 0; i < lineCount; i++) {
       DrawTextEx(font, lines[i], pos, fontSize, spacing, BLACK);
-      pos.y += fontSize; 
+      pos.y += fontSize;
     }
 
     EndDrawing();
